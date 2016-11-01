@@ -1,2 +1,4 @@
 mutube.egg-info/
 mutube/__pycache__/
+*.pyc
+*.swp
