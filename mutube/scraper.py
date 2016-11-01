@@ -165,6 +165,10 @@ class Scraper():
 
         return str(soup) 
 
+    def generate_links(self):
+        """ Return self.yt_ids as a list of YouTube links. """
+        return ['https://www.youtube.com/watch?v='+yt_id
+                for yt_id in self.yt_ids]
 
 def get_yt_video_id(url):
     """ Return the video id from a Youtube url.
