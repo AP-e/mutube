@@ -5,7 +5,9 @@ Scrape YouTube links from 4chan threads.
 import json                                                                     
 from urllib.request import urlopen
 from urllib.parse import urlparse, parse_qs
+from urllib.error import HTTPError
 from bs4 import BeautifulSoup
+
 
 class Scraper():                                                                
     """ Scraper for YouTube links from 4chan threads. """
@@ -24,10 +26,10 @@ class Scraper():
                          (only scrape manual additions to self.thread_nums)
                       :: None : All threads scraped
         """    
-        # ! Should allow these to be initialised from a config
         self.board = board
         self.subjects = subjects
         self.thread_nums = set()
+        self.dead_threads = set()
         self.yt_ids = set()
 
     def scrape(self, verbose=True):
@@ -43,13 +45,19 @@ class Scraper():
         self.thread_nums.update(thread_nums)
         
         # Scrape all threads for links
-        yt_ids = self._scrape_catalog()
+        yt_ids, dead_threads = self._scrape_catalog()
         new_ids = yt_ids.difference(self.yt_ids)
-        self.yt_ids.update(yt_ids)
+        self.yt_ids.update(new_ids)
+        
+        # Remove dead threads
+        self.thread_nums -= dead_threads
+        self.dead_threads.update(dead_threads)
 
         if verbose:
-            print("Scraped {} new links from {} threads ({} new)".format(
-                    len(new_ids), len(self.thread_nums), len(new_threads)))
+            print("Scraped {} new links from {} threads".format(
+                    len(new_ids), len(self.thread_nums)),
+                    "({} new threads added, {} dead threads removed)".format(
+                        len(new_threads), len(dead_threads)))
 
     def _get_catalog(self):                                                   
         """ Retrieve an up-to-date JSON catalog of the 4chan board. """
@@ -72,7 +80,6 @@ class Scraper():
         data = json.loads(content.decode("utf8"))
         return data
 
-
     def _scrape_catalog(self):
         """ Scrape (optionally filtered) board catalog for YouTube links 
         
@@ -81,9 +88,13 @@ class Scraper():
         """
         # Scrape links from each comment in each thread
         yt_ids = set()
+        dead_threads = set()
         for thread_num in self.thread_nums:
-            yt_ids.update(self._scrape_thread(thread_num))
-        return yt_ids
+            try:
+                yt_ids.update(self._scrape_thread(thread_num))
+            except(HTTPError):
+                dead_threads.add(thread_num)
+        return yt_ids, dead_threads
 
     def _scrape_thread(self, thread_num):
         """ Return any YouTube links scraped from posts at `thread_num`. """
