@@ -21,7 +21,8 @@ Either download and unzip this repository, or clone it using git:
   - a list of thread subjects to identify and scrape, e.g. `['kpop', '/kpop/' ,'kpop general']` (case-insensitive)
   - `None` to identify all threads in the catalog for scraping
   - an empty list (`[]`) to identify no threads for scraping
-To manually add or remove threads for scraping (including those in the archive), modify the `thread_nums` attribute. The method `scrape()` processes every thread in `thread_nums`, searching for YouTube links in any form and storing their unique video ids in a set. This set of video ids can be found at the `yt_ids` attribute — save these an do as thou wilt.
+
+To manually add or remove threads for scraping (including those in the archive), modify the `thread_nums` attribute. The method `scrape()` searches for YouTube links in every thread in `thread_nums` — inaccessible threads are transferred to the `dead_threads` attribute — storing a set of their unique video ids in `yt_ids` attribute. Store these as-is, or use the `generate_links()` method to output these as valid YouTube urls.
 
 ## Examples
     >>> from mutube import Scraper
@@ -36,6 +37,8 @@ To manually add or remove threads for scraping (including those in the archive),
     >>> scraper.thread_nums.add(68780725) # manually add thread to scrape
     >>> scraper.scrape()
     Scraped 12 new links from 1 threads (0 new)
+    >>> print(scraper.generate_links()) # get yt_ids as a list of YouTube links
+    ['https://www.youtube.com/watch?v=V9Ty3YnWN80', 'https://www.youtube.com/watch?v=aGQECkbhpow', 'https://www.youtube.com/watch?v=Ytyw1PC0m80', 'https://www.youtube.com/watch?v=mvPIvoJkmGs', 'https://www.youtube.com/watch?v=NR7_TbMIVnA', 'https://www.youtube.com/watch?v=Jx2fp-kKOIw', 'https://www.youtube.com/watch?v=6tiq9rzQp-I', 'https://www.youtube.com/watch?v=ejAEx_kWmko', 'https://www.youtube.com/watch?v=5eZ_TgE3x_A', 'https://www.youtube.com/watch?v=2EkzNGkIPdE', 'https://www.youtube.com/watch?v=JzRTzj7YEh4', 'https://www.youtube.com/watch?v=VoQzuWyz08M']
 
 ## Never Asked Questions
 **Why are no threads being scraped?**
@@ -50,10 +53,6 @@ You probably supplied a string as the `subjects` arguments, when it should be a 
 
 `BeautifulSoup` is a bit lippy, but it's easy to [suppress these warnings](https://docs.python.org/2/library/warnings.html#temporarily-suppressing-warnings).
 
-**Why am I getting an HTTPError upon scraper *initialisation*?**
+**Why am I getting an HTTPError **
 
-The board catalog cannot be reached. 4chan may be down, but it's more likely that you spelt the the board name wrongly.
-
-**Why am I getting an HTTPError during *scraping*?**
-
-A thread has been fallen out the archive or has been deleted. Sorry.
+The board catalog cannot be reached. It may be that 4chan is down, though it's more likely that you spelt the the board name wrongly.
