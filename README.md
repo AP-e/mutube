@@ -18,9 +18,10 @@ Either download and unzip this repository, or clone it using git:
 
 - `board`: the abbreviation of the 4chan board to be scraped, e.g. `'mu'` or `'tv'`
 - `subjects`: either:
-  - a list of thread subjects to identify and scrape, e.g. `['kpop', '/kpop/' ,'kpop general']` (case-insensitive)
+  - a list of thread subjects to identify and scrape (e.g. `['kpop', '/kpop/' ,'kpop general']`, case-insensitive)
   - `None` to identify all threads in the catalog for scraping
   - an empty list (`[]`) to identify no threads for scraping
+- `bad_posters`: optional list of names of posters to ignore (e.g. `['Hampus', 'Biotroll']`)
 
 To manually add or remove threads for scraping (including those in the archive), modify the `thread_nums` attribute. The method `scrape()` searches for YouTube links in every thread in `thread_nums` — inaccessible threads are transferred to the `dead_threads` attribute — storing a set of their unique video ids in `yt_ids` attribute. Store these as-is, or use the `generate_links()` method to output these as valid YouTube urls.
 
