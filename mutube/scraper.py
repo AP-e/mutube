@@ -12,7 +12,7 @@ from bs4 import BeautifulSoup
 class Scraper():                                                                
     """ Scraper for YouTube links from 4chan threads. """
 
-    def __init__(self, board, subjects):
+    def __init__(self, board, subjects, bad_posters=None):
         """ Set up scraper for `board`, with optional `subjects`.
     
     Args:
@@ -25,12 +25,15 @@ class Scraper():
                       :: [] : No new threads identified for scraping
                          (only scrape manual additions to self.thread_nums)
                       :: None : All threads scraped
+            bad_posters ::: (opt) list of posting names (sans trip) to ignore
+                            e.g. : ['Tinytrip', 'ennui'] 
         """    
         self.board = board
         self.subjects = subjects
         self.thread_nums = set()
         self.dead_threads = set()
         self.yt_ids = set()
+        self.bad_posters = [] if bad_posters is None else bad_posters
 
     def scrape(self, verbose=True):
         """ Scrape YouTube links from up-to-date catalog with current settings.
@@ -101,6 +104,8 @@ class Scraper():
         #Extract posts
         yt_ids = set()
         for post in self._get_thread(thread_num)['posts']:
+            if post['name'] in self.bad_posters: # skip undesirable posters
+                continue
             try:
                 yt_ids.update(self._scrape_comment(post['com']))
             except(KeyError): # skip blank posts
