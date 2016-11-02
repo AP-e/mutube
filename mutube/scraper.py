@@ -104,7 +104,7 @@ class Scraper():
         #Extract posts
         yt_ids = set()
         for post in self._get_thread(thread_num)['posts']:
-            if post['name'] in self.bad_posters: # skip undesirable posters
+            if post.get('name', '') in self.bad_posters: # skip undesirable posters
                 continue
             try:
                 yt_ids.update(self._scrape_comment(post['com']))
