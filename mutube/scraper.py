@@ -194,9 +194,6 @@ def get_yt_video_id(url):
     # modified from gist by Mikhail Kashkin(http://stackoverflow.com/users/85739/mikhail-kashkin)
     # initial version: http://stackoverflow.com/a/7936523/617185 \
     """
-    if url.lower() == 'youtube': # reject plain mentions of 'youtube'
-        raise ValueError
-
     if url.startswith(('youtu', 'www')):
         url = 'http://' + url
 
@@ -207,6 +204,8 @@ def get_yt_video_id(url):
             return parse_qs(query.query)['v'][0]
         elif query.path.startswith(('/embed/', '/v/')):
             return query.path.split('/')[2]
+        else: 
+            raise ValueError
     elif 'youtu.be' in query.hostname:
         return query.path[1:]
     else:
