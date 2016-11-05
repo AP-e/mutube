@@ -3,9 +3,7 @@
 Scrape YouTube links from 4chan threads.
 """
 import json                                                                     
-from urllib.request import urlopen
-from urllib.parse import urlparse, parse_qs
-from urllib.error import HTTPError
+from .compat import HTTPError, parse_qs, urlopen, urlparse
 from bs4 import BeautifulSoup
 
 
