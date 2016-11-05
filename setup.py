@@ -6,7 +6,7 @@ setup(name='mutube',
       url='https://github.com/AP-e/mutube',
       license='unlicense',
       classifiers=['Development Status :: 2 - Pre-Alpha',
-                   'Programming Language :: Python :: 3 :: Only'],
+                   'Programming Language :: Python'],
       keywords='4chan youtube',
       packages=find_packages(),
       install_requires=['bs4'])
