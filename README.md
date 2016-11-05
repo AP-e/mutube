@@ -2,7 +2,7 @@
 Scrape YouTube links from 4chan threads.
 
 ## Requires
-At the moment, mutube is written in [Python 3](https://www.python.org/), but it can be easily ported to Python 2.7. The only dependency is the package BeautifulSoup ([`bs4`](https://www.crummy.com/software/BeautifulSoup/)), but this will be installed automatically by `pip`.
+[Python (2.7 or 3.x)](https://www.python.org/) with the BeautifulSoup package ([`bs4`](https://www.crummy.com/software/BeautifulSoup/), will be installed automatically by `pip`).
 
 ## Install (Linux)
 Either download and unzip this repository, or clone it using git:
