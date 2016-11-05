@@ -8,6 +8,6 @@ try: # python 3.x
     from urllib.error import HTTPError
 
 except(ImportError): # python 2.x
-    from urllib2 import urlopen, urlparse, HTTPError
-    from urlparse import parse_qs
+    from urllib2 import urlopen, HTTPError
+    from urlparse import parse_qs, urlparse
 
