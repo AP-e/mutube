@@ -2,7 +2,8 @@
 
 Scrape YouTube links from 4chan threads.
 """
-import json                                                                     
+import json
+import time
 from .compat import HTTPError, URLError, parse_qs, urlopen, urlparse
 from bs4 import BeautifulSoup
 
