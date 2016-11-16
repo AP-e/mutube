@@ -103,7 +103,7 @@ class Playlister():
         
         return tagged_playlists
     
-    def _create_new_playlist(self, title):
+    def create_new_playlist(self, title):
         """ Create an empty public playlist with `title`. """
         
         # Create request
