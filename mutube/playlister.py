@@ -132,7 +132,7 @@ class Playlister():
         
         return posted_ids
     
-    def _insert_vid_to_playlist(self, playlist, yt_id):
+    def insert_vid_to_playlist(self, playlist, yt_id):
         """ Insert `yt_id` to playlist, returning response. """
         # Build insert request
         request = youtube.playlistItems().insert(part='snippet', body={'snippet':{
