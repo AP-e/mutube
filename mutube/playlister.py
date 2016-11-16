@@ -1,5 +1,6 @@
 """ playlister """
 
+from .exceptions import NoTag, NoPlaylist
 from apiclient.discovery import build
 from apiclient.errors import HttpError
 from oauth2client.client import flow_from_clientsecrets
@@ -13,15 +14,6 @@ import time
 YOUTUBE_READ_WRITE_SCOPE = "https://www.googleapis.com/auth/youtube"
 YOUTUBE_API_SERVICE_NAME = "youtube"
 YOUTUBE_API_VERSION = "v3"
-
-class NoTag(ValueError):
-    """ When no tag is found in a string. """
-    pass
-
-
-class NoPlaylist(ValueError):
-    """ When no matching playlist is found. """
-    pass
 
 class Playlister():
     """ Create YouTube playlists. """
