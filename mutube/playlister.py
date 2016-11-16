@@ -90,7 +90,7 @@ class Playlister():
             try: # store playlist
                 tag = self._extract_tag_from_title(playlist['snippet']['title'])
                 tagged_playlists[tag] = playlist # ! duplicates get shadowed
-            except NoTagError:
+            except NoTag:
                 pass
         
         return tagged_playlists
@@ -135,10 +135,11 @@ class Playlister():
     def insert_vid_to_playlist(self, playlist, yt_id):
         """ Insert `yt_id` to playlist, returning response. """
         # Build insert request
-        request = youtube.playlistItems().insert(part='snippet', body={'snippet':{
-            'playlistId': playlist['id'],
-            'resourceId': {'kind': 'youtube#video',
-                           'videoId': yt_id}}})
+        request = self.youtube.playlistItems().insert(
+            part='snippet', body={'snippet':{
+                'playlistId': playlist['id'],
+                'resourceId': {'kind': 'youtube#video',
+                    'videoId': yt_id}}})
         return request.execute()
 
 
