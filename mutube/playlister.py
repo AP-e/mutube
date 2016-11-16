@@ -14,8 +14,13 @@ YOUTUBE_READ_WRITE_SCOPE = "https://www.googleapis.com/auth/youtube"
 YOUTUBE_API_SERVICE_NAME = "youtube"
 YOUTUBE_API_VERSION = "v3"
 
-class NoTagError(ValueError):
-    """ When no tag is found. """
+class NoTag(ValueError):
+    """ When no tag is found in a string. """
+    pass
+
+
+class NoPlaylist(ValueError):
+    """ When no matching playlist is found. """
     pass
 
 class Playlister():
@@ -66,7 +71,7 @@ class Playlister():
         if self._validate_tag(tag):
             return tag
         else:
-            raise NoTagError("No valid tag in: \n\t{}".format(title))
+            raise NoTag("No valid tag in: \n\t{}".format(title))
 
     def _validate_tag(self, tag):
         """ Return True if `tag` matches the initialised tag format. """
@@ -108,19 +113,15 @@ class Playlister():
                       status=dict(privacyStatus="public")))
         
         return request.execute()
-    
-    def get_playlist(self, tag=None):
-        """ Return (existing or newly-created) playlist matching `tag`."""
-        
-        # Generate current tag if none provided (! might move to higher method)
-        if tag is None:
-            tag = encode_tag(self.stump, time.localtime(), self.time_format)
+
+    def get_playlist(self, tag):
+        """ Return a playlist matching `tag`."""
         
         tagged_playlists = self.get_tagged_playlists()
-        # import pdb; pdb.set_trace()
-        playlist = tagged_playlists.get(tag,
-            self._create_new_playlist(tag)) # create new playlist if no match
-        
+        playlist = tagged_playlists.get(tag)
+        if playlist is None:
+            raise NoPlaylist("No playlist found matching tag: {}".format(tag))
+
         return playlist
     
     def get_posted_yt_ids(self, playlist):
