@@ -2,8 +2,9 @@
 
 Scrape YouTube links from 4chan threads.
 """
-import json                                                                     
-from .compat import HTTPError, parse_qs, urlopen, urlparse
+import json
+import time
+from .compat import HTTPError, URLError, parse_qs, urlopen, urlparse
 from bs4 import BeautifulSoup
 
 
@@ -64,7 +65,23 @@ class Scraper():
         """ Retrieve an up-to-date JSON catalog of the 4chan board. """
         catalog_url = '/'.join(['https://a.4cdn.org', self.board,
                 'catalog.json'])
-        self.catalog = self._get_json_data(catalog_url)
+        
+        # Retrieve catalog
+        catalog = None
+        while not catalog:
+            try:
+                catalog = self._get_json_data(catalog_url)
+            except URLError as e: # try again if connection reset by peer
+                try:
+                    if e.reason.errno == 104:
+                        print('Connection reset error, waiting 5 minutes')
+                        time.sleep(300)
+                    else:
+                        raise e
+                except AttributeError:
+                    raise e
+                
+        self.catalog = catalog
 
     def _get_thread(self, thread_num):
         """ Retreive and return the JSON of the thread at `thread_num`. """
