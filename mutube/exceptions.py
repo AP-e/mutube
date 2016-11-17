@@ -7,3 +7,7 @@ class NoTag(ValueError):
 class NoPlaylist(ValueError):
     """ When no matching playlist is found. """
     pass
+
+class BadVideo(ValueError):
+    """ When the YouTube video id does not lead to a real video """
+    pass

@@ -1,6 +1,6 @@
 """ playlister """
 
-from .exceptions import NoTag, NoPlaylist
+from .exceptions import NoTag, NoPlaylist, BadVideo
 from apiclient.discovery import build
 from apiclient.errors import HttpError
 from oauth2client.client import flow_from_clientsecrets
@@ -164,8 +164,15 @@ class Playlister():
                 'playlistId': playlist['id'],
                 'resourceId': {'kind': 'youtube#video',
                     'videoId': yt_id}}})
-        return request.execute()
 
+        # Return a valid response, or raise an error
+        try: 
+            return request.execute()
+        except HttpError as err:
+            if err.resp.status == 404: # "video not found" error
+                raise BadVideo('video does not exist: {}'.format(yt_id))
+            else:
+                raise err
 
 # Helper functions
 def encode_tag(prefix, time_tuple, time_format):
