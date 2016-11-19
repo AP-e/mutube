@@ -79,8 +79,9 @@ class Mutuber():
         # Add scraped videos to playlist
         for yt_id in self.scraper.yt_ids - self.existing_ids: # new videos only
             try:
-                response = self.playlister.insert_vid_to_playlist(yt_id)
-                existing_ids.add(yt_id)
+                response = self.playlister.insert_vid_to_playlist(self.playlist,
+                                                                  yt_id)
+                self.existing_ids.add(yt_id)
                 print('Inserted: {}'.format(yt_id))
             except BadVideo: # skip dead links
                     print('Failed to insert: {}'.format(yt_id))
