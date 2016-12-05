@@ -15,16 +15,19 @@ class Mutuber():
     """ Scrape from 4chan and post to YouTube playlists. """
  
     def __init__(self, board, subjects, prefix, time_format, client_json,
-                 playlister_pause=1, scraper_pause=None):
+                 current_only, playlister_pause, scraper_pause):
 
-        """ . 
+        """ .
         Args:
             board ::: (str) abbreviated name of 4chan board to scrape
             subjects ::: (list) titles of `board` threads to scrape
             prefix, time_format ::: (str) playlist tag specs, see documentation
+            client_json ::: (str) path to YouTube OAuth 2.0 client credentials
+                JSON file (see ...)
+            current_only ::: (bool) `True` to search only currently active
+                playlist for duplicates, `False` to consider all specified
             playlister_pause, scraper_pause ::: (int) minutes to pause between
-                posting to playlist and between scrape cycles, respectively
-            client_json ::: (str) path to YouTube OAuth 2.0 client credentials JSON
+                playlist insertions and scrape cycles, respectively
         """
         # Initialise objects
         self.scraper = Scraper(board, subjects)
@@ -33,24 +36,37 @@ class Mutuber():
         # Initialise options ! should check within acceptable ranges
         self.playlister_pause = playlister_pause
         self.scraper_pause = scraper_pause
-        
+        self.current_only = current_only
+
         # Get existing id's
-        #! should not be on init -- let user choose whether to consider all playlists or just current
-        self.existing_ids = self.get_existing_ids()
-        self.scraper.yt_ids.update(self.existing_ids)
+        if not self.current_only:
+            self.existing_ids = self.get_all_existing_ids()
 
     def run_forever(self):
         """ Run continuous scrape-post cycles, with a delay. """
+        delay = self.scraper_pause * 60
         while True:
             self.run_once()
-            time.sleep(self.scraper_pause * 60) # space out scrapes
+            print("Playlist updated, sleeping for {} seconds".format(delay))
+            time.sleep(delay) # space out scrapes
 
     def run_once(self):
-        self.playlist = self.get_current_playlist() # get current playlist
+        # Get current playlist
+        self.playlist = self.get_current_playlist()
+        # Reset existing ids when considering only current playlist
+        if self.current_only:
+            self.existing_ids = self.playlister.get_posted_yt_ids(self.playlist)
+        # Make scrape message accurate
+        self.scraper.yt_ids.update(self.existing_ids)
+        # Run scraping and insertion
         self.scrape_and_insert_videos_to_playlist()
 
-    # Should be optionable for 'all' or 'current'
-    def get_existing_ids(self):
+    def get_current_ids(self):
+        """ Return all video_ids posted in current playlist. """
+        playlist = self.playlister.get_current_playlist()
+        return set(self.playlister.get_posted_yt_ids(playlist))
+
+    def get_all_existing_ids(self):
         """ Return all video_ids posted in playlists tagged as specified. """
         playlists = self.playlister.get_tagged_playlists()
         existing_ids = set()
@@ -75,9 +91,10 @@ class Mutuber():
 
     def scrape_and_insert_videos_to_playlist(self):
         """ Scrape videos from 4chan and post to specified playlist. """
+
         # Scrape videos from 4chan
         self.scraper.scrape()
-        
+
         # Add scraped videos to playlist
         for yt_id in self.scraper.yt_ids - self.existing_ids: # new videos only
             try:
