@@ -34,8 +34,10 @@ class Mutuber():
         self.playlister_pause = playlister_pause
         self.scraper_pause = scraper_pause
         
+        # Get existing id's
         #! should not be on init -- let user choose whether to consider all playlists or just current
         self.existing_ids = self.get_existing_ids()
+        self.scraper.yt_ids.update(self.existing_ids)
 
     def run_forever(self):
         """ Run continuous scrape-post cycles, with a delay. """
