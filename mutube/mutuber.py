@@ -1,9 +1,5 @@
-"""
-Script to scrape /bleep/ and post to YouTube playlist
-Upcoming improvements include
-    Management of `live_threads`.
-    This could then be presented as a combination of a module and a script,
-    with command line argument parsing, and inserted to mutube
+""" mutuber
+Coordinate posting to YouTube playlist of videos scraped from 4chan.
 """
 
 from .exceptions import NoPlaylist, BadVideo
