@@ -17,7 +17,7 @@ class Mutuber():
     def __init__(self, board, subjects, prefix, time_format, client_json,
                  current_only, playlister_pause, scraper_pause):
 
-        """ .
+        """ Initialise mutuber with attached scraper, playlister instances.
         Args:
             board ::: (str) abbreviated name of 4chan board to scrape
             subjects ::: (list) titles of `board` threads to scrape
@@ -33,7 +33,7 @@ class Mutuber():
         self.scraper = Scraper(board, subjects)
         self.playlister = Playlister(prefix, time_format, client_json)
 
-        # Initialise options ! should check within acceptable ranges
+        # Initialise options 
         self.playlister_pause = playlister_pause
         self.scraper_pause = scraper_pause
         self.current_only = current_only
@@ -51,15 +51,24 @@ class Mutuber():
             time.sleep(delay) # space out scrapes
 
     def run_once(self):
+        """ Scrape videos from active thread and insert to current playlist."""
         # Get current playlist
         self.playlist = self.get_current_playlist()
-        # Reset existing ids when considering only current playlist
-        if self.current_only:
-            self.existing_ids = self.playlister.get_posted_yt_ids(self.playlist)
-        # Make scrape message accurate
+        
+        # Update set of existing ids
+        if self.current_only: # reset existing ids in current only mode
+            self.scraper.yt_ids = set() # flush out scrape history
+            self.existing_ids = self.playlister.get_posted_yt_ids(
+                    self.playlist) # only consider active playlist
+        
+        # Sync scraper with existing ids (to make scrape messages accurate)
         self.scraper.yt_ids.update(self.existing_ids)
-        # Run scraping and insertion
-        self.scrape_and_insert_videos_to_playlist()
+        
+        # Scrape new videos from active threads
+        self.scraper.scrape()
+        
+        # Insert new videos
+        self.insert_videos_to_playlist()
 
     def get_current_ids(self):
         """ Return all video_ids posted in current playlist. """
@@ -89,17 +98,13 @@ class Mutuber():
     
         return playlist
 
-    def scrape_and_insert_videos_to_playlist(self):
-        """ Scrape videos from 4chan and post to specified playlist. """
-
-        # Scrape videos from 4chan
-        self.scraper.scrape()
-
+    def insert_videos_to_playlist(self):
+        """ Insert all new videos to current playlist. """
         # Add scraped videos to playlist
         for yt_id in self.scraper.yt_ids - self.existing_ids: # new videos only
             try:
-                response = self.playlister.insert_vid_to_playlist(self.playlist,
-                                                                  yt_id)
+                response = self.playlister.insert_vid_to_playlist(
+                        self.playlist, yt_id)
                 self.existing_ids.add(yt_id)
                 print('Inserted: {}'.format(yt_id))
             except BadVideo: # skip dead links
