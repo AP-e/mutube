@@ -30,7 +30,7 @@ class Scraper():
         self.board = board
         self.subjects = subjects
         self.thread_nums = set()
-        self.dead_threads = set()
+        self.closed_threads = set()
         self.yt_ids = set()
         self.bad_posters = [] if bad_posters is None else bad_posters
 
@@ -47,19 +47,19 @@ class Scraper():
         self.thread_nums.update(thread_nums)
         
         # Scrape all threads for links
-        yt_ids, dead_threads = self._scrape_catalog()
+        yt_ids, closed_threads = self._scrape_catalog()
         new_ids = yt_ids.difference(self.yt_ids)
         self.yt_ids.update(new_ids)
         
-        # Remove dead threads
-        self.thread_nums -= dead_threads
-        self.dead_threads.update(dead_threads)
+        # Remove closed threads
+        self.thread_nums -= closed_threads
+        self.closed_threads.update(closed_threads)
 
         if verbose:
             print("Scraped {} new links from {} threads".format(
                     len(new_ids), len(self.thread_nums)),
-                    "({} new threads added, {} dead threads removed)".format(
-                        len(new_threads), len(dead_threads)))
+                    "({} new threads added, {} closed threads removed)".format(
+                        len(new_threads), len(closed_threads)))
 
     def _get_catalog(self):                                                   
         """ Retrieve an up-to-date JSON catalog of the 4chan board. """
@@ -103,23 +103,32 @@ class Scraper():
         
         Args:
             subjects (opt) ::: list of str, thread subjects to filter
+        Returns:
+            yt_ids ::: set of video ids of scraped YouTube links
+            closed_threads ::: set of numbers of closed/archived/404 threads
         """
         # Scrape links from each comment in each thread
         yt_ids = set()
-        dead_threads = set()
+        closed_threads = set()
         for thread_num in self.thread_nums:
             try:
-                yt_ids.update(self._scrape_thread(thread_num))
-            except(HTTPError):
-                dead_threads.add(thread_num)
-        return yt_ids, dead_threads
+                thread = self._get_thread(thread_num) # retrieve thread JSON
+                yt_ids.update(self._scrape_thread(thread)) # scrape thread
+                # Flag closed threads
+                if thread['posts'][0].get('closed', False):
+                    closed_threads.add(thread_num)
+            except(HTTPError): # flag inaccesible threads
+                closed_threads.add(thread_num)
+        
+        return yt_ids, closed_threads
 
-    def _scrape_thread(self, thread_num):
-        """ Return any YouTube links scraped from posts at `thread_num`. """
-        #Extract posts
+    def _scrape_thread(self, thread):
+        """ Return any YouTube links scraped from posts in `thread`. """
+        # Extract posts
         yt_ids = set()
-        for post in self._get_thread(thread_num)['posts']:
-            if post.get('name', '') in self.bad_posters: # skip undesirable posters
+        for post in thread['posts']:
+            # Skip undesirable posters
+            if post.get('name', '') in self.bad_posters: 
                 continue
             try:
                 yt_ids.update(self._scrape_comment(post['com']))
