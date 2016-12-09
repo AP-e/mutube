@@ -10,8 +10,8 @@ import time
 class Mutuber():
     """ Scrape from 4chan and post to YouTube playlists. """
  
-    def __init__(self, board, subjects, prefix, time_format, client_json,
-                 current_only, playlister_pause, scraper_pause):
+    def __init__(self, board, matching, prefix, time_format, client_json,
+                 current_only, playlister_pause, scraper_pause, **matching_kwargs):
 
         """ Initialise mutuber with attached scraper, playlister instances.
         Args:
@@ -26,7 +26,7 @@ class Mutuber():
                 playlist insertions and scrape cycles, respectively
         """
         # Initialise objects
-        self.scraper = Scraper(board, subjects)
+        self.scraper = Scraper(board, matching, **matching_kwargs)
         self.playlister = Playlister(prefix, time_format, client_json)
 
         # Initialise options 

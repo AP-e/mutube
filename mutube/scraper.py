@@ -11,24 +11,34 @@ from bs4 import BeautifulSoup
 class Scraper():                                                                
     """ Scraper for YouTube links from 4chan threads. """
 
-    def __init__(self, board, subjects, bad_posters=None):
-        """ Set up scraper for `board`, with optional `subjects`.
+    def __init__(self, board, matching, bad_posters=None, **matching_kwargs):
+        """ Set up scraper for `board` with specified scraping criteria.
     
     Args:
             board ::: str abbreviated name of 4chan board to scrape
                       eg : 'mu' : http://boards.4chan.org/mu/
-            subjects ::: either:
-                      :: list str thread subjects to which scraping is
-                         restricted (case insensitive)
+            matching ::: either of:
+                      :: (callable) function returning bool indicating whether
+                         thread is to be scraped based on it's subject (str)
+                         signature: matching(subject, **matching_kwargs)
+                      :: (iterable) str thread subjects, passed to `is_in_list`
+                         function to identify threads to scrape by simple (case
+                         insensitive) text matching
                          e.g. : ['/punk/', 'punk', 'punk general']
-                      :: [] : No new threads identified for scraping
-                         (only scrape manual additions to self.thread_nums)
-                      :: None : All threads scraped
-            bad_posters ::: (opt) list of posting names (sans trip) to ignore
-                            e.g. : ['Tinytrip', 'ennui'] 
+                         empty list will identify no new threads for, i.e. only
+                         manual additions to self.thread_nums are scraped
+            bad_posters (opt) ::: list of posting names (sans trip) to ignore
+                            e.g. : ['Tinytrip', 'ennui']
+            **matching_kwargs ::: keyword arguments to pass to matching func
         """    
         self.board = board
-        self.subjects = subjects
+        # Specify matching criteria
+        if callable(matching): # use user-defined matching rules
+            self.matching_func = matching
+            self.matching_kwargs = matching_kwargs
+        else: # use module's simple "in list" matching
+            self.matching_func = is_in_list
+            self.matching_kwargs = {'matching': matching}
         self.thread_nums = set()
         self.closed_threads = set()
         self.yt_ids = set()
@@ -101,8 +111,6 @@ class Scraper():
     def _scrape_catalog(self):
         """ Scrape (optionally filtered) board catalog for YouTube links 
         
-        Args:
-            subjects (opt) ::: list of str, thread subjects to filter
         Returns:
             yt_ids ::: set of video ids of scraped YouTube links
             closed_threads ::: set of numbers of closed/archived/404 threads
@@ -137,8 +145,7 @@ class Scraper():
         return yt_ids
 
     def _filter_catalog(self):
-        """ Return thread numbers in catalog which match `self.subjects`.
-            (no filtering if `self.subjects=None` or is otherwise invalid)
+        """ Return thread numbers in catalog which meet matching criteria.
         """ 
         thread_nums = set()
 
@@ -147,10 +154,8 @@ class Scraper():
             for thread in page['threads']:
                 thread_no = int(thread['no'])
                 subject = thread.get('sub', '')
-                try: # Return matching, or return all threads
-                    if subject.lower() in self.subjects:                                 
-                        thread_nums.add(thread_no)
-                except(TypeError): # Yield all if no (or invalid) subjects
+                # Filter catalogs by subject
+                if self.matching_func(subject, **self.matching_kwargs):
                     thread_nums.add(thread_no)
         return thread_nums
 
@@ -199,6 +204,8 @@ class Scraper():
         return ['https://www.youtube.com/watch?v='+yt_id
                 for yt_id in self.yt_ids]
 
+""" Helper functions """
+
 def get_yt_video_id(url):
     """ Return the video id from a Youtube url.
 
@@ -236,3 +243,6 @@ def get_yt_video_id(url):
         return query.path[1:]
     else:
         raise ValueError
+
+def is_in_list(subject, matching):
+    return True if subject.lower() in matching else False
