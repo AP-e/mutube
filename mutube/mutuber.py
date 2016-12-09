@@ -9,10 +9,8 @@ import time
 
 class Mutuber():
     """ Scrape from 4chan and post to YouTube playlists. """
- 
-    def __init__(self, board, matching, prefix, time_format, client_json,
-                 current_only, playlister_pause, scraper_pause, **matching_kwargs):
 
+    def __init__(self, scraper, playlister, current_only=False):
         """ Initialise mutuber with attached scraper, playlister instances.
         Args:
             board ::: (str) abbreviated name of 4chan board to scrape
@@ -22,31 +20,31 @@ class Mutuber():
                 JSON file (see ...)
             current_only ::: (bool) `True` to search only currently active
                 playlist for duplicates, `False` to consider all specified
-            playlister_pause, scraper_pause ::: (int) minutes to pause between
-                playlist insertions and scrape cycles, respectively
         """
         # Initialise objects
-        self.scraper = Scraper(board, matching, **matching_kwargs)
-        self.playlister = Playlister(prefix, time_format, client_json)
+        self.scraper = scraper
+        self.playlister = playlister
 
         # Initialise options 
-        self.playlister_pause = playlister_pause
-        self.scraper_pause = scraper_pause
         self.current_only = current_only
 
         # Get existing id's
         if not self.current_only:
             self.existing_ids = self.get_all_existing_ids()
 
-    def run_forever(self):
-        """ Run continuous scrape-post cycles, with a delay. """
-        delay = self.scraper_pause * 60
+    def run_forever(self, playlister_pause=1, scraper_pause=30):
+        """ Run continuous scrape-post cycles.
+        Args:
+            playlister_pause, scraper_pause ::: (int) minutes to pause between
+            playlist insertions and scrape cycles, respectively
+        """
+        delay = scraper_pause * 60
         while True:
-            self.run_once()
+            self.run_once(playlister_pause)
             print("Playlist updated, sleeping for {} seconds".format(delay))
             time.sleep(delay) # space out scrapes
 
-    def run_once(self):
+    def run_once(self, playlister_pause=1):
         """ Scrape videos from active thread and insert to current playlist."""
         # Get current playlist
         self.playlist = self.get_current_playlist()
@@ -64,7 +62,7 @@ class Mutuber():
         self.scraper.scrape()
         
         # Insert new videos
-        self.insert_videos_to_playlist()
+        self.insert_videos_to_playlist(playlister_pause)
 
     def get_current_ids(self):
         """ Return all video_ids posted in current playlist. """
@@ -94,7 +92,7 @@ class Mutuber():
     
         return playlist
 
-    def insert_videos_to_playlist(self):
+    def insert_videos_to_playlist(self, playlister_pause):
         """ Insert all new videos to current playlist. """
         # Add scraped videos to playlist
         for yt_id in self.scraper.yt_ids - self.existing_ids: # new videos only
@@ -106,4 +104,4 @@ class Mutuber():
             except BadVideo: # skip dead links
                     print('Failed to insert: {}'.format(yt_id))
     
-            time.sleep(self.playlister_pause * 60) # space out write requests
+            time.sleep(playlister_pause * 60) # space out write requests
