@@ -11,34 +11,38 @@ from bs4 import BeautifulSoup
 class Scraper():                                                                
     """ Scraper for YouTube links from 4chan threads. """
 
-    def __init__(self, board, matching, bad_posters=None, **matching_kwargs):
+    def __init__(self, board, matching_func=None, bad_posters=None,
+                 **matching_kwargs):
         """ Set up scraper for `board` with specified scraping criteria.
     
     Args:
             board ::: str abbreviated name of 4chan board to scrape
                       eg : 'mu' : http://boards.4chan.org/mu/
             matching ::: either of:
-                      :: (callable) function returning bool indicating whether
-                         thread is to be scraped based on it's subject (str)
-                         signature: matching(subject, **matching_kwargs)
-                      :: (iterable) str thread subjects, passed to `is_in_list`
+                      :: (callable, opt) function returning bool indicating
+                         whether thread is to be scraped based on it's subject
+                         call signature: matching(subject, **matching_kwargs)
+                         if matching=None, `subjects` must be supplied (see
+                         below)
+            bad_posters (opt) ::: list of posting names (sans trip) to ignore
+                            e.g. : ['Tinytrip', 'ennui']
+            **matching_kwargs ::: keyword args to pass to matching_func, e.g:
+            subjects ::: (iterable) str thread subjects, passed to `is_in_list`
                          function to identify threads to scrape by simple (case
                          insensitive) text matching
                          e.g. : ['/punk/', 'punk', 'punk general']
-                         empty list will identify no new threads for, i.e. only
-                         manual additions to self.thread_nums are scraped
-            bad_posters (opt) ::: list of posting names (sans trip) to ignore
-                            e.g. : ['Tinytrip', 'ennui']
-            **matching_kwargs ::: keyword arguments to pass to matching func
+                         `[]` will identify no new threads; only manual
+                         additions to self.thread_nums are scraped
         """    
         self.board = board
         # Specify matching criteria
-        if callable(matching): # use user-defined matching rules
-            self.matching_func = matching
-            self.matching_kwargs = matching_kwargs
-        else: # use module's simple "in list" matching
+        if matching_func is None: # use simple matching
             self.matching_func = is_in_list
-            self.matching_kwargs = {'matching': matching}
+        else:
+            self.matching_func = matching_func
+        self.matching_kwargs = matching_kwargs
+        
+        # Initialise set and list attributes
         self.thread_nums = set()
         self.closed_threads = set()
         self.yt_ids = set()
@@ -244,5 +248,5 @@ def get_yt_video_id(url):
     else:
         raise ValueError
 
-def is_in_list(subject, matching):
-    return True if subject.lower() in matching else False
+def is_in_list(subject, subjects):
+    return True if subject.lower() in subjects else False
