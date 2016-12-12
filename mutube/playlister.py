@@ -66,7 +66,8 @@ class Playlister():
     def _extract_tag_from_title(self, title):
         """ Return tag found in `title` matching specified format."""
 
-        tag = title.split()[0] # assume tag is first 'unit' of title
+        tag = title.split(']')[0] # assume tag is at start of title
+        tag = tag + ']' # reattach delimiter
         if self._validate_tag(tag):
             return tag
         else:
