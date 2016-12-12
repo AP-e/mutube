@@ -89,8 +89,13 @@ class Playlister():
         """ Return {tag: response} for appropriately tagged playlists. """
 
         # Fetch list of playlists
-        all_playlists = self.youtube.playlists().list(
-                part='snippet', mine=True).execute()['items']
+        all_playlists = []
+        request = self.youtube.playlists().list(
+                part='snippet', mine=True, maxResults=50)
+        while request:
+            response=request.execute()
+            all_playlists.extend(response['items'])
+            request = self.youtube.playlists().list_next(request, response)
 
         # Filter playlists
         tagged_playlists = {}
