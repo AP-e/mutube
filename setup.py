@@ -9,4 +9,4 @@ setup(name='mutube',
                    'Programming Language :: Python'],
       keywords='4chan youtube',
       packages=find_packages(),
-      install_requires=['bs4'])
+      install_requires=['bs4', 'apiclient', 'oauth2client'])
