@@ -20,7 +20,7 @@ class ResourceBuilder(object):
     
     @classmethod
     def from_credentials_object(cls, credentials):
-        """ Return a resource object from a credentials object.
+        """ Return a resource object from a user credentials object.
         Args:
             credentials ::: `oauth2client.client.Credentials` instance
         Returns:
@@ -60,8 +60,9 @@ class ResourceBuilder(object):
         Creates:
             <user_credentials_fname> ::: .json file containing user credentials
 
-        Note that this requires human interaction, and will not work in a
-        jupyter notebook.
+        This method will try to open a link in the browser requesting that the
+        user sign in to YouTube and authorise the app to modify data.
+        This will not work if run inside of a Jupyter Notebook.
         """
         
         # Build OAuth flow object
