@@ -6,7 +6,7 @@ import httplib2
 import json
 from apiclient.discovery import build
 from apiclient.errors import HttpError
-from oauth2client.client import flow_from_clientsecrets
+from oauth2client.client import Credentials, flow_from_clientsecrets
 from oauth2client.file import Storage
 from oauth2client.tools import run_flow
 
@@ -30,6 +30,17 @@ class ResourceBuilder(object):
         youtube = build(YOUTUBE_API_SERVICE_NAME, YOUTUBE_API_VERSION,
                         http=credentials.authorize(httplib2.Http()))
         return youtube
+
+    @classmethod
+    def from_user_credentials_json(cls, user_credentials_json):
+        """ Return a resource object from json of user credentials. """
+        try:
+            credentials = Credentials.new_from_json(user_credentials_json)
+        except(ValueError): # when user passed dict instead of json
+            credentials = Credentials.new_from_json(
+                                json.dumps(user_credentials_json))
+        
+        return cls.from_credentials_object(credentials)
 
     @classmethod
     def from_user_credentials_file(cls, user_credentials_fname):
