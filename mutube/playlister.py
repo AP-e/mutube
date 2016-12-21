@@ -1,24 +1,15 @@
 """ playlister """
 
 from .exceptions import NoTag, NoPlaylist, BadVideo
-from apiclient.discovery import build
 from apiclient.errors import HttpError
-from oauth2client.client import flow_from_clientsecrets
-from oauth2client.file import Storage
-from oauth2client.tools import run_flow
 import json
 import httplib2
 import time
 
-# YouTube API information
-YOUTUBE_READ_WRITE_SCOPE = "https://www.googleapis.com/auth/youtube"
-YOUTUBE_API_SERVICE_NAME = "youtube"
-YOUTUBE_API_VERSION = "v3"
-
 class Playlister():
     """ Create YouTube playlists. """
 
-    def __init__(self, prefix, time_format, client_json='client_id.json'):
+    def __init__(self, resource, prefix, time_format):
         """
         Initialise YouTube client and specify tag format for playlist titles.
 
@@ -26,43 +17,14 @@ class Playlister():
             prefix ::: (str) unique identifier for playlist series
                         see `encode_tag` documentation
             time_format ::: (str) format specifier for `time.strftime`
-                            see http://strftime.org/
-            client_json ::: (str) path to .JSON file containing OAuth 2.0
-                            client credentials, downloaded from:
-                            https://console.developers.google.com/
-        """
-        self.youtube = self._build_resource(client_json)
+                            see http://strftime.org/	
+            resource ::: YouTube `apiclient.discovery.Resource` instance,
+	    		 authorised for read/write requests
+	"""	
+        self.youtube = resource 
         self.prefix = prefix
         self.time_format = time_format
-
-    def _build_resource(self, client_json):
-        """ Create the resource object to interact with YouTube API.
-
-        Args:
-            client_json ::: (str) path to .JSON file containing OAuth 2.0
-                            client credentials
-        """
-
-        # Get project id
-        with open(client_json) as o:
-            project_id = json.load(o)['installed']['project_id']
-
-        # Build OAuth flow object
-        flow = flow_from_clientsecrets(filename=client_json,
-                                       scope=YOUTUBE_READ_WRITE_SCOPE)
-
-        # Load/create credentials
-        storage = Storage("{}-oauth2.json".format(project_id))
-        credentials = storage.get()
-        if credentials is None or credentials.invalid: # request authorisation
-            credentials = run_flow(flow, storage) # ! warning: fails in ipynb
-
-        # Build YouTube resource object
-        youtube = build(YOUTUBE_API_SERVICE_NAME, YOUTUBE_API_VERSION,
-                        http=credentials.authorize(httplib2.Http()))
-
-        return youtube
-
+    
     def _extract_tag_from_title(self, title):
         """ Return tag found in `title` matching specified format."""
 
@@ -225,3 +187,4 @@ def decode_tag(tag, time_format):
     time_tuple = time.strptime(datestr, time_format)
     
     return prefix, time_tuple
+
